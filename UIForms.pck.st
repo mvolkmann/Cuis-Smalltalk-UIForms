@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7044] on 1 February 2025 at 4:04:14 pm'!
+'From Cuis7.3 [latest update: #7044] on 2 February 2025 at 7:08:49 pm'!
 'Description '!
-!provides: 'UIForms' 1 0!
+!provides: 'UIForms' 1 4!
 SystemOrganization addCategory: #UIForms!
 
 
@@ -15,9 +15,9 @@ Greeter class
 	instanceVariableNames: ''!
 
 
-!Greeter methodsFor: 'initialization' stamp: 'RMV 2/1/2025 16:02:45'!
+!Greeter methodsFor: 'initialization' stamp: 'RMV 2/1/2025 16:42:34'!
 initialize
-	| ageInput ageRow column greetingLabel nameInput nameRow |
+	| ageInput ageRow button column greetingLabel nameInput nameRow |
 	
 	super initialize.
 		
@@ -60,6 +60,11 @@ initialize
 	ageRow
 		addMorph: (LabelMorph contents: 'Age:');
 		addMorph: ageInput proportionalWidth: 1. "fills row"
+		
+	button := PluggableButtonMorph model: self action: #handleButtonClick.
+	button label: 'Click Me'.
+	"buttonExtent := button morphExtent.
+	button morphExtent: (buttonExtent x + 20) @ buttonExtent y."
 
 	column := self layoutMorph.
 	column separation: 10. "between child morphs; defaults to 0"
@@ -67,22 +72,26 @@ initialize
 	column
 		addMorph: nameRow fixedHeight: 0; "to use minimum height that fits row children"
 		addMorph: ageRow fixedHeight: 0; "to use minimum height that fits row children"
+		addMorph: button;
 		addMorph: greetingLabel.
 	
 	"To left align all child morphs of column ...
 	column submorphs do: [ :morph | morph layoutSpec offAxisEdgeWeight: #leftOrTop ]."! !
 
-!Greeter class methodsFor: 'as yet unclassified' stamp: 'RMV 2/1/2025 16:02:45'!
+!Greeter methodsFor: 'as yet unclassified' stamp: 'RMV 2/1/2025 16:36:20'!
+handleButtonClick
+
+	'got button click' print.! !
+
+!Greeter class methodsFor: 'as yet unclassified' stamp: 'RMV 2/2/2025 19:08:25'!
 open
 	| extent window |
 	
 	window := self new.
-	window openInWorld.
-	
-	"Set window size to the smallest height that contains its submorphs.
-	This must be done AFTER the window is opened."
 	extent := window layoutMorph minimumExtent.
-	window morphExtent: 300 @ extent y.! !
+	extent := Point x: 300 y: extent y.
+	window morphExtent: extent.
+	window openInWorld.! !
 
 !Greeter class methodsFor: 'as yet unclassified' stamp: 'RMV 2/1/2025 16:03:03'!
 worldMenuOptions
