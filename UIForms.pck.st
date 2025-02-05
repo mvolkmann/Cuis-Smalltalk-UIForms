@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7044] on 4 February 2025 at 7:16:31 pm'!
+'From Cuis7.3 [latest update: #7044] on 4 February 2025 at 7:17:37 pm'!
 'Description '!
-!provides: 'UIForms' 1 8!
+!provides: 'UIForms' 1 9!
 SystemOrganization addCategory: #UIForms!
 
 
@@ -644,7 +644,7 @@ onDoneToggle: aBlock
 handleLabelClick: aMouseEvent
 	aMouseEvent logAs: 'Todo handleLabelClick: aMouseEvent'.! !
 
-!Todo methodsFor: 'initialization' stamp: 'RMV 2/4/2025 19:12:20'!
+!Todo methodsFor: 'initialization' stamp: 'RMV 2/4/2025 19:17:23'!
 initialize
 	| button buttonFont |
 	
@@ -666,7 +666,7 @@ initialize
 
 	button := BasicButtonMorph
 		label: '🗑' "wastebasket Unicode character"
-		onClick: [onDelete value].
+		onClick: [ onDelete value ].
 	button fillColor: Color transparent; textColor: Color red.
 	button font: buttonFont.
 		
