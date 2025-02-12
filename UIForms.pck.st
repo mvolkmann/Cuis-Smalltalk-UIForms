@@ -1,4 +1,4 @@
-'From Cuis7.3 [latest update: #7044] on 12 February 2025 at 1:37:02 pm'!
+'From Cuis7.3 [latest update: #7044] on 12 February 2025 at 2:18:06 pm'!
 'Description '!
 !provides: 'UIForms' 1 35!
 SystemOrganization addCategory: #UIForms!
@@ -36,7 +36,7 @@ LabelledTextMorph class
 
 !classDefinition: #RadioButtonGroup category: #UIForms!
 LayoutMorph subclass: #RadioButtonGroup
-	instanceVariableNames: 'labelArray valueArray'
+	instanceVariableNames: 'labelArray onChange valueArray'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'UIForms'!
@@ -56,7 +56,7 @@ TodosPane class
 
 !classDefinition: #Greeter category: #UIForms!
 SystemWindow subclass: #Greeter
-	instanceVariableNames: ''
+	instanceVariableNames: 'selectedColor'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'UIForms'!
@@ -342,24 +342,18 @@ label: labelString placeholder: phString
 	^ instance.
 ! !
 
-!RadioButtonGroup methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 13:01:09'!
-initialize
-
-	super initialize! !
-
-!RadioButtonGroup methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 13:32:52'!
+!RadioButtonGroup methodsFor: 'private' stamp: 'RMV 2/12/2025 14:14:03'!
 labels: aLabelArray values: aValueArray
-	| onChange |
+	| localOnChange |
 
 	labelArray := aLabelArray.
 	valueArray := aValueArray.
 	
-	onChange := [ :value |
-		'selected value is {1}.' format: { value } :: print.
+	localOnChange := [ :value |
 		self submorphs do: [ :radioButton |
-			radioButton value logAs: 'radioButton value'.
 			radioButton selected: (radioButton value = value).
 		].
+		onChange ifNotNil: [ onChange value: value ].
 	].
 	
 	self gap: 10.
@@ -367,9 +361,19 @@ labels: aLabelArray values: aValueArray
 		| radioButton |
 		
 		radioButton := BasicRadioButtonMorph label: label value: value.
-		radioButton onChange: onChange.
+		radioButton onChange: localOnChange.
 		self addMorph: radioButton.
 	].! !
+
+!RadioButtonGroup methodsFor: 'initialization' stamp: 'RMV 2/12/2025 13:01:09'!
+initialize
+
+	super initialize! !
+
+!RadioButtonGroup methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 14:14:34'!
+onChange: aBlock
+
+	onChange := aBlock! !
 
 !RadioButtonGroup class methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 12:59:47'!
 labels: aLabelArray values: aValueArray
@@ -394,7 +398,7 @@ adjustExtent
 new
 	^ self newColumn! !
 
-!Greeter methodsFor: 'initialization' stamp: 'RMV 2/12/2025 13:20:55'!
+!Greeter methodsFor: 'initialization' stamp: 'RMV 2/12/2025 14:17:50'!
 initialize
 	| ageRow button1 button2 checkbox column greetingLabel moodLabel nameRow radioButtonGroup |
 	
@@ -426,10 +430,10 @@ initialize
 		moodLabel color: (checked ifTrue: [ Color green ] ifFalse: [ Color red ]).
 	].
 	
-	radioButtonGroup := RadioButtonGroup labels: #(Red Green Blue) values: #($r $g $b).
-	"radioButton onChange: [ :selected |
-		'Red radiobutton selected?' print
-	]."
+	radioButtonGroup := RadioButtonGroup
+		labels: #(Red Green Blue)
+		values: { Color red. Color green. Color blue }.
+	radioButtonGroup onChange: [ :aColor | moodLabel color: aColor ].
 	
 	button1 := PluggableButtonMorph model: self action: #handleButtonClick.
 	button1 label: 'Click Me'.
