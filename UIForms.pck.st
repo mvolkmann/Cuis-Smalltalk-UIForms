@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7044] on 12 February 2025 at 2:18:06 pm'!
+'From Cuis7.3 [latest update: #7044] on 12 February 2025 at 2:44:44 pm'!
 'Description '!
-!provides: 'UIForms' 1 35!
+!provides: 'UIForms' 1 38!
 SystemOrganization addCategory: #UIForms!
 
 
@@ -76,7 +76,7 @@ BasicButtonMorph class
 
 !classDefinition: #BasicCheckboxMorph category: #UIForms!
 BorderedBoxMorph subclass: #BasicCheckboxMorph
-	instanceVariableNames: 'checked fillColor hoverColor hovered onChange'
+	instanceVariableNames: 'checked fillColor hoverColor hovered onChange defaultBorderColor'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'UIForms'!
@@ -86,7 +86,7 @@ BasicCheckboxMorph class
 
 !classDefinition: #BasicRadioButtonMorph category: #UIForms!
 BoxMorph subclass: #BasicRadioButtonMorph
-	instanceVariableNames: 'borderColor borderWidth fillColor font height hoverColor hovered label onChange selected separation value'
+	instanceVariableNames: 'borderColor fillColor font height hovered label onChange selected separation value'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'UIForms'!
@@ -235,17 +235,16 @@ new
 	the superclass LayoutMorph new method triggers an error."
 	^ self newRow! !
 
-!LabelledCheckboxMorph methodsFor: 'private' stamp: 'RMV 2/4/2025 19:10:54'!
+!LabelledCheckboxMorph methodsFor: 'private' stamp: 'RMV 2/12/2025 14:41:48'!
 label: aString checked: aBoolean
 	| label |
 
 	checkbox := BasicCheckboxMorph new.
 	label := LabelMorph contents: aString.
 
-	self separation: 10.
+	self gap: 10.
 	self addMorph: checkbox.
-	self addMorph: label.
-! !
+	self addMorph: label.! !
 
 !LabelledCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/4/2025 19:11:28'!
 checked
@@ -626,13 +625,12 @@ textColor: aColor
 label: aString onClick: aBlock
 	^ self new label: aString; onClick:​ aBlock! !
 
-!BasicCheckboxMorph methodsFor: 'drawing' stamp: 'RMV 8/15/2024 15:58:15'!
+!BasicCheckboxMorph methodsFor: 'drawing' stamp: 'RMV 2/12/2025 14:43:32'!
 drawOn: aCanvas
-	| savedColor x y |
-	
-	hovered ifTrue: [ savedColor := color. color := hoverColor ].
+	| x y |
+
+	borderColor := hovered ifTrue: [ defaultBorderColor muchDarker ] ifFalse: defaultBorderColor.
 	super drawOn: aCanvas.
-	hovered ifTrue: [ color := savedColor ].
 
 	x := self morphExtent x.
 	y := self morphExtent y.
@@ -648,20 +646,20 @@ drawOn: aCanvas
 	]
 ! !
 
-!BasicCheckboxMorph methodsFor: 'initialization' stamp: 'RMV 2/11/2025 09:10:25'!
+!BasicCheckboxMorph methodsFor: 'initialization' stamp: 'RMV 2/12/2025 14:44:12'!
 initialize
 	
 	super initialize.
 	
-	borderColor := Color black.
-	borderWidth := 1.
+	defaultBorderColor := Color gray muchLighter.
+	borderColor := defaultBorderColor.
+	borderWidth := 2.
 	checked := false.
 	color := Color white.
 	hovered := false.
-	hoverColor := borderColor alpha: 0.1.
-	self morphExtent: 20 @ 20.
 	
-	self layoutSpec: (LayoutSpec fixedWidth: (self morphExtent x) fixedHeight: (self morphExtent y))! !
+	self morphExtent: 20 @ 20.
+	self layoutSpec: (LayoutSpec fixedWidth: (self morphExtent x) fixedHeight: (self morphExtent y)).! !
 
 !BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:09:29'!
 handlesMouseDown: aMouseEvent
@@ -708,22 +706,12 @@ checked: aBoolean
 	checked := aBoolean.
 	self redrawNeeded! !
 
-!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:06'!
-hoverColor
-	
-	^ hoverColor! !
-
-!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:10'!
-hoverColor: aColor
-	
-	hoverColor := aColor! !
-
 !BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:14'!
 requiresVectorCanvas
 	
 	^ true! !
 
-!BasicRadioButtonMorph methodsFor: 'drawing' stamp: 'RMV 2/12/2025 13:32:03'!
+!BasicRadioButtonMorph methodsFor: 'drawing' stamp: 'RMV 2/12/2025 14:23:17'!
 drawOn: aCanvas
 	| color halfHeight labelX labelY |
 		
@@ -733,7 +721,6 @@ drawOn: aCanvas
 		aCanvas circleCenter: halfHeight @ halfHeight radius: halfHeight
 	].
 
-	selected logAs: 'selected'.
 	selected ifTrue: [
 		aCanvas fillColor: Color green do: [
 			aCanvas circleCenter: halfHeight @ halfHeight radius: halfHeight - 3
@@ -755,18 +742,16 @@ drawOn: aCanvas
 	].
 ! !
 
-!BasicRadioButtonMorph methodsFor: 'initialization' stamp: 'RMV 2/12/2025 13:09:39'!
+!BasicRadioButtonMorph methodsFor: 'initialization' stamp: 'RMV 2/12/2025 14:42:55'!
 initialize
 	
 	super initialize.
 	
 	borderColor := Color gray muchLighter.
-	borderWidth := 1.
 	fillColor := Color gray.
 	font := FontFamily defaultFamilyAndPointSize.
 	height := 20.
 	hovered := false.
-	hoverColor := borderColor alpha: 0.1.
 	label := ''.
 	onChange := [ :isSelected | ].
 	selected := false.
@@ -815,16 +800,6 @@ mouseLeave: aMouseEvent
 onChange: aBlock
 	
 	onChange := aBlock! !
-
-!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:51'!
-hoverColor
-	
-	^ hoverColor! !
-
-!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:51'!
-hoverColor: aColor
-	
-	hoverColor := aColor! !
 
 !BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/12/2025 12:39:19'!
 label: aString value: anObject selected: aBoolean
