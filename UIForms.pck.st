@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7044] on 4 February 2025 at 7:17:37 pm'!
+'From Cuis7.3 [latest update: #7044] on 12 February 2025 at 1:37:02 pm'!
 'Description '!
-!provides: 'UIForms' 1 9!
+!provides: 'UIForms' 1 35!
 SystemOrganization addCategory: #UIForms!
 
 
@@ -33,6 +33,16 @@ LayoutMorph subclass: #LabelledTextMorph
 !classDefinition: 'LabelledTextMorph class' category: #UIForms!
 LabelledTextMorph class
 	instanceVariableNames: 'label model'!
+
+!classDefinition: #RadioButtonGroup category: #UIForms!
+LayoutMorph subclass: #RadioButtonGroup
+	instanceVariableNames: 'labelArray valueArray'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'UIForms'!
+!classDefinition: 'RadioButtonGroup class' category: #UIForms!
+RadioButtonGroup class
+	instanceVariableNames: 'labelArray valueArray'!
 
 !classDefinition: #TodosPane category: #UIForms!
 LayoutMorph subclass: #TodosPane
@@ -74,6 +84,26 @@ BorderedBoxMorph subclass: #BasicCheckboxMorph
 BasicCheckboxMorph class
 	instanceVariableNames: ''!
 
+!classDefinition: #BasicRadioButtonMorph category: #UIForms!
+BoxMorph subclass: #BasicRadioButtonMorph
+	instanceVariableNames: 'borderColor borderWidth fillColor font height hoverColor hovered label onChange selected separation value'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'UIForms'!
+!classDefinition: 'BasicRadioButtonMorph class' category: #UIForms!
+BasicRadioButtonMorph class
+	instanceVariableNames: ''!
+
+!classDefinition: #CanvasDemo category: #UIForms!
+BoxMorph subclass: #CanvasDemo
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'UIForms'!
+!classDefinition: 'CanvasDemo class' category: #UIForms!
+CanvasDemo class
+	instanceVariableNames: ''!
+
 !classDefinition: #Todo category: #UIForms!
 Object subclass: #Todo
 	instanceVariableNames: 'checkbox label labelFont onDelete onDoneToggle row'
@@ -111,6 +141,10 @@ and make the LabelMorph visible with the old contents.!
 This is a basic button morph that is simpler and easier to understand that PluggableButtonMorph.!
 
 !BasicCheckboxMorph commentStamp: 'RMV 8/18/2024 14:46:57' prior: 0!
+This is a basic checkbox morph that is simpler and easier to understand that CheckButtonMorph.
+It also has a look that I find more intuitive.!
+
+!BasicRadioButtonMorph commentStamp: '<historical>' prior: 0!
 This is a basic checkbox morph that is simpler and easier to understand that CheckButtonMorph.
 It also has a look that I find more intuitive.!
 
@@ -308,6 +342,43 @@ label: labelString placeholder: phString
 	^ instance.
 ! !
 
+!RadioButtonGroup methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 13:01:09'!
+initialize
+
+	super initialize! !
+
+!RadioButtonGroup methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 13:32:52'!
+labels: aLabelArray values: aValueArray
+	| onChange |
+
+	labelArray := aLabelArray.
+	valueArray := aValueArray.
+	
+	onChange := [ :value |
+		'selected value is {1}.' format: { value } :: print.
+		self submorphs do: [ :radioButton |
+			radioButton value logAs: 'radioButton value'.
+			radioButton selected: (radioButton value = value).
+		].
+	].
+	
+	self gap: 10.
+	labelArray with: valueArray do: [ :label :value |
+		| radioButton |
+		
+		radioButton := BasicRadioButtonMorph label: label value: value.
+		radioButton onChange: onChange.
+		self addMorph: radioButton.
+	].! !
+
+!RadioButtonGroup class methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 12:59:47'!
+labels: aLabelArray values: aValueArray
+	| answer |
+	
+	answer := self newRow.
+	answer labels: aLabelArray values:​ aValueArray.
+	^ answer.! !
+
 !TodosPane methodsFor: 'initialization' stamp: 'rmv 9/13/2024 11:00:49'!
 initialize
 	super initialize.
@@ -323,9 +394,9 @@ adjustExtent
 new
 	^ self newColumn! !
 
-!Greeter methodsFor: 'initialization' stamp: 'RMV 2/4/2025 19:16:10'!
+!Greeter methodsFor: 'initialization' stamp: 'RMV 2/12/2025 13:20:55'!
 initialize
-	| ageRow button checkbox column greetingLabel moodLabel nameRow |
+	| ageRow button1 button2 checkbox column greetingLabel moodLabel nameRow radioButtonGroup |
 	
 	super initialize.
 		
@@ -355,10 +426,17 @@ initialize
 		moodLabel color: (checked ifTrue: [ Color green ] ifFalse: [ Color red ]).
 	].
 	
-	button := PluggableButtonMorph model: self action: #handleButtonClick.
-	button label: 'Click Me'.
-	"buttonExtent := button morphExtent.
-	button morphExtent: (buttonExtent x + 20) @ buttonExtent y."
+	radioButtonGroup := RadioButtonGroup labels: #(Red Green Blue) values: #($r $g $b).
+	"radioButton onChange: [ :selected |
+		'Red radiobutton selected?' print
+	]."
+	
+	button1 := PluggableButtonMorph model: self action: #handleButtonClick.
+	button1 label: 'Click Me'.
+	
+	button2 := BasicButtonMorph label: 'Click Me' onClick: [ self handleButtonClick ].
+	button2 fillColor: Color yellow; hoverColor: Color green muchLighter; textColor: Color red.
+	button2 borderColor: Color blue; borderWidth: 6.
 
 	column := self layoutMorph.
 	column separation: 10. "between child morphs; defaults to 0"
@@ -367,32 +445,24 @@ initialize
 		addMorph: nameRow fixedHeight: 0; "to use minimum height that fits row children"
 		addMorph: ageRow fixedHeight: 0; "to use minimum height that fits row children"
 		addMorph: checkbox;
+		addMorph: radioButtonGroup;
 		addMorph: moodLabel;
-		addMorph: button;
+		addMorph: button1;
+		addMorph: button2;
 		addMorph: greetingLabel.
 	
-	"To left align all child morphs of column ...
-	column submorphs do: [ :morph | morph layoutSpec offAxisEdgeWeight: #leftOrTop ]."! !
+	"Left align all child morphs of column."
+	column submorphs do: [ :morph | morph layoutSpec offAxisEdgeWeight: #leftOrTop ].! !
 
 !Greeter methodsFor: 'as yet unclassified' stamp: 'RMV 2/1/2025 16:36:20'!
 handleButtonClick
 
 	'got button click' print.! !
 
-!Greeter class methodsFor: 'as yet unclassified' stamp: 'RMV 2/4/2025 14:50:14'!
+!Greeter class methodsFor: 'as yet unclassified' stamp: 'RMV 2/7/2025 16:54:42'!
 open
 	| extent window |
-	
-	"sender := thisContext sender.
-	morph := nil.
-	[ sender notNil and: [ morph isNil ] ] whileTrue: [
-		sender logAs: 'sender'.
-		sender receiver logAs: 'receiver'.
-		sender receiver isKindOf: Morph :: ifTrue: [ morph = sender receiver ].
-		sender := sender sender.
-	].
-	morph logAs: 'morph'."
-	
+		
 	window := self new.
 	extent := window layoutMorph minimumExtent.
 	extent := Point x: 300 y: extent y.
@@ -414,114 +484,138 @@ worldMenuOptions
 		} asDictionary
 	}`! !
 
-!BasicButtonMorph methodsFor: 'drawing' stamp: 'RMV 9/23/2024 11:28:39'!
+!BasicButtonMorph methodsFor: 'drawing' stamp: 'RMV 2/10/2025 11:07:54'!
 drawOn: aCanvas
-	| radius rect rectColor |
-		
-	rect := Rectangle origin: 0@0 extent: self morphExtent.
-	rectColor := hovered ifTrue: hoverColor ifFalse: fillColor.
+	| borderRect buttonColor buttonRect height radius width |
+			
 	radius := padding x max: padding y.
-	aCanvas roundRect: rect color: rectColor radius: radius.
+
+	borderWidth = 0 ifFalse: [
+		borderRect := Rectangle origin: 0 @ 0 extent: extent.
+		aCanvas roundRect: borderRect color: borderColor radius: radius.
+	].
+	
+	width := extent x - (borderWidth * 2).
+	height := extent y - (borderWidth * 2).
+	buttonRect := Rectangle origin: borderWidth @ borderWidth extent: width @ height.
+	buttonColor := hovered ifTrue: hoverColor ifFalse: fillColor.
+	aCanvas roundRect: buttonRect color: buttonColor radius: radius - borderWidth.
 	
 	aCanvas
 		drawString: label
 		from: 1
 		to: label size
-		atBaseline: padding x @ (padding y + font pointSize)
+		atBaseline: (borderWidth + padding x) @ (borderWidth + (padding y + font pointSize))
 		font: font
 		color: textColor! !
 
-!BasicButtonMorph methodsFor: 'initialization' stamp: 'RMV 9/23/2024 11:26:11'!
+!BasicButtonMorph methodsFor: 'initialization' stamp: 'RMV 2/10/2025 10:58:12'!
 initialize
+	
 	super initialize.
 	
 	borderWidth := 0.
 	color := Color white.
 	fillColor := `Color black alpha: 0.1`.
 	font := FontFamily defaultFamilyAndPointSize.
-	hovered := false.
 	hoverColor := `Color black alpha: 0.2`.
+	hovered := false.
 	padding := 10 @ 10.
 	textColor := Color black.! !
 
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:00:16'!
+!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/10/2025 10:52:16'!
 handlesMouseDown: aMouseEvent
+	
 	^ true! !
 
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:00:16'!
+!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/10/2025 10:52:21'!
 handlesMouseOver: aMouseEvent
+	
 	^ true! !
 
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:11:04'!
+!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/10/2025 10:52:26'!
 label: aString
+	
 	label := aString! !
 
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:02:31'!
+!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/10/2025 10:52:31'!
 mouseButton1Down: aMouseEvent localPosition: aPosition
+	
 	onClick ifNotNil: [onClick value]! !
 
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:00:16'!
+!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/10/2025 10:52:35'!
 mouseEnter: aMouseEvent
+	
 	hovered := true.
 	self redrawNeeded ! !
 
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:00:16'!
+!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/10/2025 10:52:39'!
 mouseLeave: aMouseEvent
+	
 	hovered := false.
 	self redrawNeeded ! !
 
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:00:16'!
-onChange: aBlock
-	onChange := aBlock! !
-
-!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 8/15/2024 19:02:50'!
+!BasicButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/10/2025 10:53:04'!
 onClick: aBlock
+	
 	onClick := aBlock! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/16/2024 13:06:53'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:52:08'!
 fillColor
+	
 	^ fillColor! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/16/2024 13:06:38'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:52:04'!
 fillColor: aColor
+	
 	fillColor := aColor! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/16/2024 12:56:47'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:51:59'!
 font
+	
 	^ font! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/16/2024 12:56:37'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:51:55'!
 font: aFont
+	
 	font := aFont! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/15/2024 19:00:16'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:51:51'!
 hoverColor
+	
 	^ hoverColor! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/15/2024 19:00:16'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:51:47'!
 hoverColor: aColor
+	
 	hoverColor := aColor! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 9/23/2024 11:26:42'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 11:04:44'!
 morphExtent
-	| labelHeight labelWidth |
+	| height labelHeight labelWidth width |
+	
 	font ifNil: [ font := FontFamily defaultFamilyAndPointSize ].
 	labelWidth := font widthOfString: label.
 	labelHeight := font pointSize. "TODO: correct?"
-	^ (padding x * 2 + labelWidth) @ (padding y * 2 + labelHeight)
+	width := borderWidth + padding x * 2 + labelWidth.
+	height := borderWidth + padding y * 2 + labelHeight.
+	^ width @ height.
 	
 ! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/15/2024 19:00:16'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:51:35'!
 requiresVectorCanvas
+	
 	^ true! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/16/2024 16:32:28'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:51:27'!
 textColor
+	
 	^ textColor! !
 
-!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 8/16/2024 16:32:36'!
+!BasicButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/10/2025 10:51:31'!
 textColor: aColor
+	
 	textColor := aColor! !
 
 !BasicButtonMorph class methodsFor: 'as yet unclassified' stamp: 'RMV 8/15/2024 19:10:20'!
@@ -550,8 +644,9 @@ drawOn: aCanvas
 	]
 ! !
 
-!BasicCheckboxMorph methodsFor: 'initialization' stamp: 'RMV 8/15/2024 18:57:09'!
+!BasicCheckboxMorph methodsFor: 'initialization' stamp: 'RMV 2/11/2025 09:10:25'!
 initialize
+	
 	super initialize.
 	
 	borderColor := Color black.
@@ -564,32 +659,38 @@ initialize
 	
 	self layoutSpec: (LayoutSpec fixedWidth: (self morphExtent x) fixedHeight: (self morphExtent y))! !
 
-!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 8/11/2024 19:19:49'!
+!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:09:29'!
 handlesMouseDown: aMouseEvent
+	
 	^ true! !
 
-!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 8/13/2024 18:42:12'!
+!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:09:33'!
 handlesMouseOver: aMouseEvent
+	
 	^ true! !
 
-!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 8/11/2024 19:27:43'!
+!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:09:40'!
 mouseButton1Down: aMouseEvent localPosition: aPosition
+	
 	checked := checked not.
 	self redrawNeeded.
 	onChange ifNotNil: [onChange value: checked]! !
 
-!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 8/13/2024 18:53:05'!
+!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:09:44'!
 mouseEnter: aMouseEvent
+	
 	hovered := true.
 	self redrawNeeded ! !
 
-!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 8/13/2024 18:49:43'!
+!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:09:48'!
 mouseLeave: aMouseEvent
+	
 	hovered := false.
 	self redrawNeeded ! !
 
-!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 8/11/2024 19:19:49'!
+!BasicCheckboxMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:09:53'!
 onChange: aBlock
+	
 	onChange := aBlock! !
 
 !BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/4/2025 19:11:36'!
@@ -603,16 +704,232 @@ checked: aBoolean
 	checked := aBoolean.
 	self redrawNeeded! !
 
-!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 8/13/2024 18:54:59'!
+!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:06'!
 hoverColor
+	
 	^ hoverColor! !
 
-!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 8/13/2024 18:54:49'!
+!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:10'!
 hoverColor: aColor
+	
 	hoverColor := aColor! !
 
-!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 8/15/2024 08:43:55'!
+!BasicCheckboxMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:14'!
 requiresVectorCanvas
+	
+	^ true! !
+
+!BasicRadioButtonMorph methodsFor: 'drawing' stamp: 'RMV 2/12/2025 13:32:03'!
+drawOn: aCanvas
+	| color halfHeight labelX labelY |
+		
+	halfHeight := height / 2.
+	color := hovered ifTrue: [ borderColor muchDarker ] ifFalse: borderColor.
+	aCanvas strokeWidth: 2 color: color do: [
+		aCanvas circleCenter: halfHeight @ halfHeight radius: halfHeight
+	].
+
+	selected logAs: 'selected'.
+	selected ifTrue: [
+		aCanvas fillColor: Color green do: [
+			aCanvas circleCenter: halfHeight @ halfHeight radius: halfHeight - 3
+		].
+	].
+
+	labelX := height + separation.
+	labelY := halfHeight + (font pointSize / 2) - 1.
+	aCanvas
+		drawString: label
+		from: 1
+		to: label size
+		atBaseline: labelX @ labelY
+		font: font
+		color: Color black.
+	
+	selected ifTrue: [
+		"Draw inner circle."
+	].
+! !
+
+!BasicRadioButtonMorph methodsFor: 'initialization' stamp: 'RMV 2/12/2025 13:09:39'!
+initialize
+	
+	super initialize.
+	
+	borderColor := Color gray muchLighter.
+	borderWidth := 1.
+	fillColor := Color gray.
+	font := FontFamily defaultFamilyAndPointSize.
+	height := 20.
+	hovered := false.
+	hoverColor := borderColor alpha: 0.1.
+	label := ''.
+	onChange := [ :isSelected | ].
+	selected := false.
+	separation := 5.
+	
+	self morphExtent: 100 @ 30.! !
+
+!BasicRadioButtonMorph methodsFor: 'initialization' stamp: 'RMV 2/12/2025 12:28:22'!
+morphExtent
+	| labelWidth |
+
+	labelWidth := font widthOfString: label.	
+	^ (height + separation + labelWidth) @ height.! !
+
+!BasicRadioButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:10:51'!
+handlesMouseDown: aMouseEvent
+	
+	^ true! !
+
+!BasicRadioButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:10:51'!
+handlesMouseOver: aMouseEvent
+	
+	^ true! !
+
+!BasicRadioButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/12/2025 13:34:37'!
+mouseButton1Down: aMouseEvent localPosition: aPosition
+	
+	selected := selected not.
+	self redrawNeeded.
+	'got mouse down on radio button with value {1}' format: { value } :: print.
+	onChange ifNotNil: [ onChange value: value ]! !
+
+!BasicRadioButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:10:51'!
+mouseEnter: aMouseEvent
+	
+	hovered := true.
+	self redrawNeeded ! !
+
+!BasicRadioButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:10:51'!
+mouseLeave: aMouseEvent
+	
+	hovered := false.
+	self redrawNeeded ! !
+
+!BasicRadioButtonMorph methodsFor: 'event handling' stamp: 'RMV 2/11/2025 09:10:51'!
+onChange: aBlock
+	
+	onChange := aBlock! !
+
+!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:51'!
+hoverColor
+	
+	^ hoverColor! !
+
+!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:51'!
+hoverColor: aColor
+	
+	hoverColor := aColor! !
+
+!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/12/2025 12:39:19'!
+label: aString value: anObject selected: aBoolean
+
+	label := aString.
+	value := anObject.
+	selected := aBoolean.
+! !
+
+!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 09:10:51'!
+requiresVectorCanvas
+	
+	^ true! !
+
+!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/11/2025 18:34:11'!
+selected
+	
+	^ selected! !
+
+!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/12/2025 13:31:45'!
+selected: aBoolean
+	
+	selected := aBoolean.
+	self redrawNeeded.! !
+
+!BasicRadioButtonMorph methodsFor: 'accessing' stamp: 'RMV 2/12/2025 13:36:31'!
+value
+	
+	^ value! !
+
+!BasicRadioButtonMorph class methodsFor: 'as yet unclassified' stamp: 'RMV 2/11/2025 18:19:56'!
+label: aString
+
+	^ self label: aString selected: false.! !
+
+!BasicRadioButtonMorph class methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 12:40:08'!
+label: aString selected: aBoolean	
+	
+	^ self new label: aString value: aString selected: aBoolean
+! !
+
+!BasicRadioButtonMorph class methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 12:39:58'!
+label: labelString value: anObject
+
+	^ self label: labelString value: anObject selected: false.! !
+
+!BasicRadioButtonMorph class methodsFor: 'as yet unclassified' stamp: 'RMV 2/12/2025 12:39:46'!
+label: aString value: anObject selected: aBoolean	
+	
+	^ self new label: aString value: anObject selected: aBoolean
+! !
+
+!CanvasDemo methodsFor: 'as yet unclassified' stamp: 'RMV 2/11/2025 09:14:04'!
+drawOn: aCanvas
+	| borderWidth buttonHeight buttonOrigin buttonWidth font height innerRect label outerRect padding radius width |
+		
+	"super drawOn: aCanvas."
+	aCanvas
+		fillRectangle: self localBounds
+		color: `Color yellow`.
+	
+	width := extent x.
+	height := extent y.
+	borderWidth := 10.
+	buttonOrigin := 0@0.
+	buttonWidth := 200.
+	buttonHeight := 50.
+	outerRect := Rectangle origin: buttonOrigin extent: buttonWidth @ buttonHeight.
+	innerRect := Rectangle
+		origin: (buttonOrigin x + borderWidth) @ (buttonOrigin y + borderWidth)
+		extent: (buttonWidth - (borderWidth * 2)) @ (buttonHeight - (borderWidth * 2)).
+	
+	aCanvas strokeWidth: 5 color: Color red do: [
+		aCanvas moveTo: 0 @ 0.
+		aCanvas lineTo: width @ height.
+	].
+
+	radius := 10.
+	aCanvas roundRect: outerRect color: Color blue radius: radius * 2.
+	aCanvas roundRect: innerRect color: Color green radius: radius.
+	
+	font := FontFamily defaultFamilyAndPointSize.
+	label := 'My Demo'.
+	padding := 5 @ 8.
+	aCanvas
+		drawString: label
+		from: 1
+		to: label size
+		atBaseline: (borderWidth + padding x) @ (borderWidth + (padding y + font pointSize))
+		font: font
+		color: Color black.
+		
+	aCanvas strokeWidth: 5 color: Color blue do: [
+		aCanvas circleCenter: 200 @ 200 radius: 100
+	].
+
+
+! !
+
+!CanvasDemo methodsFor: 'as yet unclassified' stamp: 'RMV 2/10/2025 10:22:26'!
+initialize
+	
+	super initialize.
+	self morphExtent: 800 @ 600.
+! !
+
+!CanvasDemo methodsFor: 'as yet unclassified' stamp: 'RMV 2/10/2025 10:11:26'!
+requiresVectorCanvas
+
 	^ true! !
 
 !Todo methodsFor: 'accessing' stamp: 'RMV 8/15/2024 18:40:33'!
