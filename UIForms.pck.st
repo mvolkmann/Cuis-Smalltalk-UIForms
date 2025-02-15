@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7044] on 15 February 2025 at 4:03:11 pm'!
+'From Cuis7.3 [latest update: #7044] on 15 February 2025 at 4:12:24 pm'!
 'Description '!
-!provides: 'UIForms' 1 67!
+!provides: 'UIForms' 1 70!
 SystemOrganization addCategory: #UIForms!
 
 
@@ -279,7 +279,7 @@ contents: aString
 
 	textModelMorph editor actualContents: aString! !
 
-!TextInputMorf methodsFor: 'private' stamp: 'RMV 2/15/2025 15:09:55'!
+!TextInputMorf methodsFor: 'private' stamp: 'RMV 2/15/2025 16:05:49'!
 label: labelString placeholder: phString
 	
 	labelString ifNotNil: [
@@ -291,9 +291,11 @@ label: labelString placeholder: phString
 	self padding: 0. "must set AFTER separation"
 
 	textModelMorph := TextModelMorph withText: '' ::
-		emptyTextDisplayMessage: phString;
 		askBeforeDiscardingEdits: false;
-		tabToFocus: true.
+		emptyTextDisplayMessage: phString;
+		hideScrollBarsIndefinitely;
+		tabToFocus: true;
+		wrapFlag: false.
 	
 	self addMorph: textModelMorph proportionalWidth: 1.! !
 
@@ -504,7 +506,7 @@ worldMenuOptions
 		} asDictionary
 	}`! !
 
-!TodoApp methodsFor: 'initialization' stamp: 'RMV 2/15/2025 15:59:59'!
+!TodoApp methodsFor: 'initialization' stamp: 'RMV 2/15/2025 16:12:19'!
 initialize
 	| button column lightBlue row |
 	
@@ -514,18 +516,17 @@ initialize
 	statusLabel := LabelMorph new
 		color: Color gray.
 	
-	"todoEntry := TextEntryMorph contents: ''."
 	todoEntry := TextInputMorf label: nil.
 	todoEntry returnAction: [ self addTodoFromEntry ].
 	
 	button := ButtonMorf label: 'Add' onClick: [ self addTodoFromEntry ].
 	
+	"TODO: Why does addig the todoEntry to this row cause its height to grow to match the button height?"
 	row := LayoutMorph newRow
 		gap: 10;
 		addMorph: todoEntry proportionalWidth: 1;
 		addMorph: button.
-	row layoutSpec proportionalHeight: 0. "defaults to 1"
-
+	
 	todosPane := LayoutMorph newColumn.
 
 	scrollPane := PluggableScrollPane new.
